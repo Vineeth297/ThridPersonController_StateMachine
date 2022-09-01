@@ -16,28 +16,26 @@ namespace StarterAssets
 		WalkState,
 		SprintState
 	}
-	
+
     [RequireComponent(typeof(CharacterController))]
 #if ENABLE_INPUT_SYSTEM && STARTER_ASSETS_PACKAGES_CHECKED
     [RequireComponent(typeof(PlayerInput))]
 #endif
-	public class PlayerController : MonoBehaviour
-	{
-		private static PlayerMovementBase CurrentState;
+    public class PlayerController : MonoBehaviour
+    {
+        private static PlayerMovementBase CurrentState;
 
-		protected PlayerMovement_IdleState IdleState = new PlayerMovement_IdleState();
-		protected PlayerMovement_WalkState WalkState = new PlayerMovement_WalkState();
-		protected PlayerMovement_SprintState SprintState = new PlayerMovement_SprintState();
+        protected PlayerMovement_IdleState IdleState = new PlayerMovement_IdleState();
+        protected PlayerMovement_WalkState WalkState = new PlayerMovement_WalkState();
+        protected PlayerMovement_SprintState SprintState = new PlayerMovement_SprintState();
 
-		[Header("Player")]
-        [Tooltip("Move speed of the character in m/s")]
+        [Header("Player")] [Tooltip("Move speed of the character in m/s")]
         public float MoveSpeed = 2.0f;
 
         [Tooltip("Sprint speed of the character in m/s")]
         public float SprintSpeed = 5.335f;
 
-        [Tooltip("How fast the character turns to face movement direction")]
-        [Range(0.0f, 0.3f)]
+        [Tooltip("How fast the character turns to face movement direction")] [Range(0.0f, 0.3f)]
         public float RotationSmoothTime = 0.12f;
 
         [Tooltip("Acceleration and deceleration")]
@@ -47,8 +45,7 @@ namespace StarterAssets
         public AudioClip[] FootstepAudioClips;
         [Range(0, 1)] public float FootstepAudioVolume = 0.5f;
 
-        [Space(10)]
-        [Tooltip("The height the player can jump")]
+        [Space(10)] [Tooltip("The height the player can jump")]
         public float JumpHeight = 1.2f;
 
         [Tooltip("The character uses its own gravity value. The engine default is -9.81f")]
@@ -65,8 +62,7 @@ namespace StarterAssets
         [Tooltip("If the character is grounded or not. Not part of the CharacterController built in grounded check")]
         public bool Grounded = true;
 
-        [Tooltip("Useful for rough ground")]
-        public float GroundedOffset = -0.14f;
+        [Tooltip("Useful for rough ground")] public float GroundedOffset = -0.14f;
 
         [Tooltip("The radius of the grounded check. Should match the radius of the CharacterController")]
         public float GroundedRadius = 0.28f;
@@ -95,7 +91,7 @@ namespace StarterAssets
         private float _cinemachineTargetPitch;
 
         // player
-		public float targetSpeed = 0f;
+        public float targetSpeed = 0f;
         private float _speed;
         private float _animationBlend;
         private float _targetRotation = 0.0f;
@@ -151,7 +147,7 @@ namespace StarterAssets
         private void Start()
         {
             _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
-            
+
             _hasAnimator = TryGetComponent(out _animator);
             _controller = GetComponent<CharacterController>();
             _input = GetComponent<StarterAssetsInputs>();
@@ -167,23 +163,23 @@ namespace StarterAssets
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
 
-			_ = new PlayerMovementBase(this, _input);
+            _ = new PlayerMovementBase(this, _input);
 
-			//Entering to Initial State - IdleState
-			CurrentState = IdleState;
-			CurrentState.OnEnter();
-		}
+            //Entering to Initial State - IdleState
+            CurrentState = IdleState;
+            CurrentState.OnEnter();
+        }
 
         private void Update()
         {
             _hasAnimator = TryGetComponent(out _animator);
 
 
-			JumpAndGravity();
-			GroundedCheck();
-			//Move();
-			CurrentState.OnUpdate();
-		}
+            //JumpAndGravity();
+            GroundedCheck();
+            //Move();
+            CurrentState.OnUpdate();
+        }
 
         private void LateUpdate()
         {
@@ -237,13 +233,13 @@ namespace StarterAssets
 
         public void Move()
         {
-			// a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
+            // a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
 
             // note: Vector2's == operator uses approximation so is not floating point error prone,
             // and is cheaper than magnitude
             // if there is no input, set the target speed to 0
 
-			// a reference to the players current horizontal velocity
+            // a reference to the players current horizontal velocity
             float currentHorizontalSpeed = new Vector3(_controller.velocity.x, 0.0f, _controller.velocity.z).magnitude;
 
             float speedOffset = 0.1f;
@@ -266,7 +262,7 @@ namespace StarterAssets
                 _speed = targetSpeed;
             }
 
-            
+
 
             // normalise input direction
             Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
@@ -392,7 +388,8 @@ namespace StarterAssets
                 if (FootstepAudioClips.Length > 0)
                 {
                     var index = Random.Range(0, FootstepAudioClips.Length);
-                    AudioSource.PlayClipAtPoint(FootstepAudioClips[index], transform.TransformPoint(_controller.center), FootstepAudioVolume);
+                    AudioSource.PlayClipAtPoint(FootstepAudioClips[index], transform.TransformPoint(_controller.center),
+                        FootstepAudioVolume);
                 }
             }
         }
@@ -401,41 +398,42 @@ namespace StarterAssets
         {
             if (animationEvent.animatorClipInfo.weight > 0.5f)
             {
-                AudioSource.PlayClipAtPoint(LandingAudioClip, transform.TransformPoint(_controller.center), FootstepAudioVolume);
+                AudioSource.PlayClipAtPoint(LandingAudioClip, transform.TransformPoint(_controller.center),
+                    FootstepAudioVolume);
             }
         }
 
-		public void SwitchToState(InputState inputState)
-		{
-			CurrentState.OnExit();
+        public void SwitchToState(InputState inputState)
+        {
+            CurrentState.OnExit();
 
-			CurrentState = inputState switch
-			{
-				InputState.IdleState => IdleState,
-				InputState.WalkState => WalkState,
-				InputState.SprintState => SprintState,
-				_ => throw new ArgumentOutOfRangeException(nameof(inputState), inputState, null)
-			};
+            CurrentState = inputState switch
+            {
+                InputState.IdleState => IdleState,
+                InputState.WalkState => WalkState,
+                InputState.SprintState => SprintState,
+                _ => throw new ArgumentOutOfRangeException(nameof(inputState), inputState, null)
+            };
 
-			CurrentState.OnEnter();
-		}
+            CurrentState.OnEnter();
+        }
 
-		public bool IsMoving()
-		{
-			if (_input.move != Vector2.zero) return true;
-			targetSpeed = 0.0f;
-			return false;
-		}
+        public bool IsMoving()
+        {
+            if (_input.move != Vector2.zero) return true;
+            targetSpeed = 0.0f;
+            return false;
+        }
 
-		public void UpdateAnim()
-		{
-			// update animator if using character
-			if (!_hasAnimator) return;
-			_animationBlend = Mathf.Lerp(_animationBlend, targetSpeed, Time.deltaTime * SpeedChangeRate);
-			if (_animationBlend < 0.01f) _animationBlend = 0f;
-			
-			_animator.SetFloat(_animIDSpeed, _animationBlend);
-			_animator.SetFloat(_animIDMotionSpeed, _input.move.magnitude);
-		}
-	}
+        public void UpdateAnim()
+        {
+            // update animator if using character
+            if (!_hasAnimator) return;
+            _animationBlend = Mathf.Lerp(_animationBlend, targetSpeed, Time.deltaTime * SpeedChangeRate);
+            if (_animationBlend < 0.01f) _animationBlend = 0f;
+
+            _animator.SetFloat(_animIDSpeed, _animationBlend);
+            _animator.SetFloat(_animIDMotionSpeed, _input.move.magnitude);
+        }
+    }
 }
