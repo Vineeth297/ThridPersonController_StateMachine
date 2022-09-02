@@ -14,7 +14,9 @@ namespace StarterAssets
 	{
 		IdleState,
 		WalkState,
-		SprintState
+		SprintState,
+		JumpState,
+		Airbone
 	}
 
     [RequireComponent(typeof(CharacterController))]
@@ -28,6 +30,8 @@ namespace StarterAssets
         protected PlayerMovement_IdleState IdleState = new PlayerMovement_IdleState();
         protected PlayerMovement_WalkState WalkState = new PlayerMovement_WalkState();
         protected PlayerMovement_SprintState SprintState = new PlayerMovement_SprintState();
+        protected PlayerMovement_JumpState JumpState = new PlayerMovement_JumpState();
+        protected PlayerMovement_AirboneState AirboneState = new PlayerMovement_AirboneState();
 
         [Header("Player")] [Tooltip("Move speed of the character in m/s")]
         public float MoveSpeed = 2.0f;
@@ -195,10 +199,10 @@ namespace StarterAssets
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
         }
 
-        private void GroundedCheck()
+        public void GroundedCheck()
         {
             // set sphere position, with offset
-            Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y - GroundedOffset,
+            var spherePosition = new Vector3(transform.position.x, transform.position.y - GroundedOffset,
                 transform.position.z);
             Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers,
                 QueryTriggerInteraction.Ignore);
@@ -295,36 +299,12 @@ namespace StarterAssets
         {
             if (Grounded)
             {
-                // reset the fall timeout timer
-                _fallTimeoutDelta = FallTimeout;
-
-                // update animator if using character
-                if (_hasAnimator)
-                {
-                    _animator.SetBool(_animIDJump, false);
-                    _animator.SetBool(_animIDFreeFall, false);
-                }
-
-                // stop our velocity dropping infinitely when grounded
-                if (_verticalVelocity < 0.0f)
-                {
-                    _verticalVelocity = -2f;
-                }
+				ResetGroundingParameters();
 
                 // Jump
-                if (_input.jump && _jumpTimeoutDelta <= 0.0f)
-                {
-                    // the square root of H * -2 * G = how much velocity needed to reach desired height
-                    _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+                if (IsJumpKeyPressed()) Jump();
 
-                    // update animator if using character
-                    if (_hasAnimator)
-                    {
-                        _animator.SetBool(_animIDJump, true);
-                    }
-                }
-
-                // jump timeout
+				// jump timeout
                 if (_jumpTimeoutDelta >= 0.0f)
                 {
                     _jumpTimeoutDelta -= Time.deltaTime;
@@ -354,12 +334,57 @@ namespace StarterAssets
             }
 
             // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
-            if (_verticalVelocity < _terminalVelocity)
-            {
-                _verticalVelocity += Gravity * Time.deltaTime;
-            }
+            FallingGravity();
         }
 
+		public bool IsGrounded()
+		{
+			return Grounded;
+		}
+
+		public void ResetGroundingParameters()
+		{
+			// reset the fall timeout timer
+			_fallTimeoutDelta = FallTimeout;
+
+			// update animator if using character
+			if (_hasAnimator)
+			{
+				_animator.SetBool(_animIDJump, false);
+				_animator.SetBool(_animIDFreeFall, false);
+			}
+
+			// stop our velocity dropping infinitely when grounded
+			if (_verticalVelocity < 0.0f)
+			{
+				_verticalVelocity = -2f;
+			}
+		}
+
+		public bool IsJumpKeyPressed()
+		{
+			return _input.jump && _jumpTimeoutDelta <= 0.0f;
+		}
+
+		public void Jump()
+		{
+			// the square root of H * -2 * G = how much velocity needed to reach desired height
+			_verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+
+			// update animator if using character
+			if (_hasAnimator)
+			{
+				_animator.SetBool(_animIDJump, true);
+			}
+		}
+		private void FallingGravity()
+		{
+			if (_verticalVelocity < _terminalVelocity)
+			{
+				_verticalVelocity += Gravity * Time.deltaTime;
+			}
+		}
+		
         private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
         {
             if (lfAngle < -360f) lfAngle += 360f;

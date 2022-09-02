@@ -11,11 +11,15 @@ public class PlayerMovement_IdleState : PlayerMovementBase
 	public override void OnUpdate()
 	{
 		Player.UpdateAnim();
-		
-		if(Player.IsMoving())
+
+
+		if (Player.IsMoving())
+		{
 			Player.SwitchToState(InputState.WalkState);
+		}
 	}
 
+	//if player on ground => move
 	public override void OnExit()
 	{
 		
